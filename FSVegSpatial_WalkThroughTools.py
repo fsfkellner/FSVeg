@@ -1,10 +1,17 @@
 import arcpy
 import os
 import zipfile
+import sys
+sys.path.append(r'C:\\Data')
+from NRGG import deleteUneededFields
 
 
 def unzipAGOLReplicaGDBAndRenameToFSVeg(
         pathOfZippedReplicaGDB, outputLocation):
+    '''Unzips file that is downloaded from AGOL and contains
+    a GDB. This tool is specific to FSVeg as the name of
+    the unzipped GDB is "FSVeg_Spatial_WT"
+    '''
     with zipfile.ZipFile(pathOfZippedReplicaGDB, "r") as zipGDB:
         zipGDB = zipfile.ZipFile(pathOfZippedReplicaGDB, "r")
         uniqueAGOLGeneratedReplicaGDBName = zipGDB.namelist()[0].split(r"/")[0]
@@ -15,6 +22,11 @@ def unzipAGOLReplicaGDBAndRenameToFSVeg(
 
 
 def renamePlotsFilesToFSVeg(outputLocation):
+    '''Uses feature class to feature class ESRI tool
+    to rename the "plot" file in the downloaded AGOL data
+    "FSVeg_Spatial_WT_Photos". Using this tool will allow for 
+    associated attachement tables to be renamed as well
+    '''
     FSVegGDBPath = os.path.join(outputLocation, 'FSVeg_Spatial_WT.gdb')
     arcpy.env.workspace = FSVegGDBPath
     # I use FC to FC here rather than rename as it allows
@@ -32,6 +44,9 @@ def renamePlotsFilesToFSVeg(outputLocation):
 
 
 def createDictOfFSVegIDsAndPlots(outputLocation):
+    '''Returns a dictionary of FSVeg data of Plot Setting ID
+    and the plot number
+    '''
     arcpy.env.workspace = outputLocation + "/FSVeg_Spatial_WT.gdb"
     cursor = arcpy.da.SearchCursor(
         "FSVeg_Spatial_WT_Photos",
@@ -50,6 +65,10 @@ def createDictOfFSVegIDsAndPlots(outputLocation):
 
 def writeAttachedPhotosMakeDictOfPhotoNames(
         outputLocation, FSVegGlobalIDDictionary):
+    '''Writes attachement photos from FSVeg AGOL data.
+    The tool creates a new folder if it doesn't exist.
+    Attachment photos are written as .jpg
+    '''
     photoFolder = os.path.join(outputLocation, 'FSVeg_Spatial_WT_Photos')
     FSVegGDBPath = os.path.join(outputLocation, 'FSVeg_Spatial_WT.gdb')
 
@@ -104,7 +123,10 @@ def writeAttachedPhotosMakeDictOfPhotoNames(
 
 def addPhotoNameFieldAndPopulate(
         outputLocation, photoNameDictionary):
-
+    '''Uses the "FSVeg_Spatial_WT" feature class and adds
+    a fiield called "PhotoNames" and populates the
+    table with the output photo attachment names
+    '''
     FSVegGDBPath = os.path.join(outputLocation, 'FSVeg_Spatial_WT.gdb')
     arcpy.env.workspace = FSVegGDBPath
     arcpy.AddField_management(
@@ -125,6 +147,9 @@ def addPhotoNameFieldAndPopulate(
 
 
 def deleteFiedsFromFSVegPhotoFeatureClass(outputLocation):
+    '''Takes hard coded list of fields to keep and uses this
+    in the NRGG function deleteUneededFields
+    '''
     FSVegGDBPath = os.path.join(outputLocation, 'FSVeg_Spatial_WT.gdb')
     arcpy.env.workspace = FSVegGDBPath
     listOfFieldsToKeep = [
@@ -134,15 +159,15 @@ def deleteFiedsFromFSVegPhotoFeatureClass(outputLocation):
         "photo_1_text",
         "PhotoNames"
     ]
-    fieldsToDelete = [
-        field.name
-        for field in arcpy.ListFields("FSVeg_Spatial_WT_Photos")
-        if field.name not in listOfFieldsToKeep and not field.required
-    ]
-    arcpy.DeleteField_management("FSVeg_Spatial_WT_Photos", fieldsToDelete)
+    deleteUneededFields("FSVeg_Spatial_WT_Photos", listOfFieldsToKeep)
+
 
 
 def deleteFeaturesWithIncorrectSettingIDValues(outputLocation):
+    '''There are some data entered in the downloaded FSVeg AGOL data
+    where the end user places incorrect data.
+    This function deletes those values.
+    '''
     FSVegGDBPath = os.path.join(outputLocation, 'FSVeg_Spatial_WT.gdb')
     arcpy.MakeFeatureLayer_management(os.path.join(FSVegGDBPath,
         "FSVeg_Spatial_WT_Photos"),"FSVeg_Spatial_WT_Photos")
@@ -152,6 +177,9 @@ def deleteFeaturesWithIncorrectSettingIDValues(outputLocation):
 
 
 def alterPlotSettingIDFieldName(outputLocation):
+    '''Changes "pl_setting_id" in the final FSVeg_Spatial_WT
+    output feature class to "Setting_ID"
+    '''
     FSVegGDBPath = os.path.join(outputLocation, 'FSVeg_Spatial_WT.gdb')
     arcpy.MakeTableView_management(os.path.join(
             FSVegGDBPath, "FSVeg_Spatial_WT_Photos"),
