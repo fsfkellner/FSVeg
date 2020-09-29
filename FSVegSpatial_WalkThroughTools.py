@@ -13,8 +13,7 @@ def unzipAGOLReplicaGDBAndRenameToFSVeg(
     the unzipped GDB is "FSVeg_Spatial_WT"
     '''
     with zipfile.ZipFile(pathOfZippedReplicaGDB, "r") as zipGDB:
-        zipGDB = zipfile.ZipFile(pathOfZippedReplicaGDB, "r")
-        uniqueAGOLGeneratedReplicaGDBName = zipGDB.namelist()[0].split(r"/")[0]
+        uniqueAGOLGeneratedReplicaGDBName = os.path.dirname(zipGDB.namelist()[0])
         zipGDB.extractall(outputLocation)
         arcpy.Rename_management(
             os.path.join(outputLocation, uniqueAGOLGeneratedReplicaGDBName),
@@ -24,7 +23,7 @@ def unzipAGOLReplicaGDBAndRenameToFSVeg(
 def renamePlotsFilesToFSVeg(outputLocation):
     '''Uses feature class to feature class ESRI tool
     to rename the "plot" file in the downloaded AGOL data
-    "FSVeg_Spatial_WT_Photos". Using this tool will allow for 
+    "FSVeg_Spatial_WT_Photos". Using this tool will allow for
     associated attachement tables to be renamed as well
     '''
     FSVegGDBPath = os.path.join(outputLocation, 'FSVeg_Spatial_WT.gdb')
@@ -160,7 +159,6 @@ def deleteFiedsFromFSVegPhotoFeatureClass(outputLocation):
         "PhotoNames"
     ]
     deleteUneededFields("FSVeg_Spatial_WT_Photos", listOfFieldsToKeep)
-
 
 
 def deleteFeaturesWithIncorrectSettingIDValues(outputLocation):
