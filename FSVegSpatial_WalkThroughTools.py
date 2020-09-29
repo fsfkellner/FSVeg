@@ -27,14 +27,15 @@ def renamePlotsFilesToFSVeg(outputLocation):
     associated attachement tables to be renamed as well
     '''
     FSVegGDBPath = os.path.join(outputLocation, 'FSVeg_Spatial_WT.gdb')
-    arcpy.env.workspace = FSVegGDBPath
+    #arcpy.env.workspace = FSVegGDBPath
     # I use FC to FC here rather than rename as it allows
     # for all the attachment files inthe GDB
     # to be called FSVeg_Spatial_WT_Photos and allows for
     # delteting of fields that Natalie and Renate
     # did now want the end user to see
+    plotFile = os.path.join(FSVegGDBPath, "plots")
     arcpy.arcpy.FeatureClassToFeatureClass_conversion(
-        "plots", FSVegGDBPath,
+        plotFile, FSVegGDBPath,
         "FSVeg_Spatial_WT_Photos")
 
     plotFilesToDelete = ['plots', 'plots__ATTACH', 'plots__ATTACHREL']
